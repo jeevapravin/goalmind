@@ -46,13 +46,15 @@ def call_llm_json(prompt: str, max_tokens: int = 4000) -> dict | list:
 
         except Exception as e:
             error_msg = str(e).lower()
-            if "429" in error_msg or "quota" in error_msg:
-                print(f"[!] Rate limited by Gemini. Retrying in 5 seconds... (Attempt {attempt + 1}/3)")
-                time.sleep(5)
+            if "429" in error_msg or "quota" in error_msg or "resource" in error_msg:
+                wait_time = 5 * (attempt + 1)  # Progressive backoff: 5s, 10s, 15s
+                print(f"[!] Rate limited by Gemini. Retrying in {wait_time}s... (Attempt {attempt + 1}/3)")
+                time.sleep(wait_time)
             elif attempt < 2:
                 print(f"[!] Invalid JSON or error generated. Retrying... (Attempt {attempt + 1}/3). Error: {e}")
-                time.sleep(2)
+                time.sleep(3)
             else:
+                print(f"[!] Gemini API failed after 3 attempts: {e}")
                 raise e
                 
     raise Exception("Gemini API failed after 3 attempts.")

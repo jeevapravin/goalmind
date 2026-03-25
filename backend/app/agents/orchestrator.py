@@ -6,6 +6,8 @@ from app.schemas import SubtaskResult, FinalVerdict
 
 VERDICT_PROMPT = """You are GoalMind. You have completed all research subtasks for this goal: "{goal}"
 
+{context_block}
+
 All research findings:
 {all_findings}
 
@@ -39,12 +41,38 @@ confidence_score is an integer 0-100.
 BE DECISIVE. No wishy-washy answers.
 """
 
-async def run_agent(goal: str):
+
+def _build_context_block(ctx: dict) -> str:
+    """Build a context injection block from enriched_context dict."""
+    if not ctx:
+        return ""
+    parts = []
+    if ctx.get('entity_context'):
+        parts.append(f"ENTITY CONTEXT: {ctx['entity_context']}")
+    if ctx.get('persona'):
+        parts.append(f"PERSONA CONTEXT: {ctx['persona']} — adjust tone accordingly.")
+    if ctx.get('framework_hint'):
+        parts.append(f"DOMAIN FRAMEWORK: {ctx['framework_hint']}")
+    if ctx.get('success_criteria'):
+        parts.append(f"SUCCESS CRITERIA: {ctx['success_criteria']}")
+    if ctx.get('assumptions'):
+        parts.append(f"CONFIRMED ASSUMPTIONS: {ctx['assumptions']}")
+    if ctx.get('mutation_modifier'):
+        parts.append(f"MUTATION MODIFIER: {ctx['mutation_modifier']}")
+    if ctx.get('clarification_answers'):
+        answers_str = ', '.join(f"{k}: {v}" for k, v in ctx['clarification_answers'].items())
+        parts.append(f"CLARIFICATION ANSWERS: {answers_str}")
+    return '\n'.join(parts)
+
+
+async def run_agent(goal: str, enriched_context: dict = None):
     """
     Async generator that yields SSE events.
     Each yield is a complete SSE-formatted string.
     """
-    
+    ctx = enriched_context or {}
+    context_block = _build_context_block(ctx)
+
     def sse(event_type: str, data: dict) -> str:
         payload = json.dumps({"type": event_type, **data})
         return f"data: {payload}\n\n"
@@ -71,7 +99,7 @@ async def run_agent(goal: str):
             })
             
             # Execute (this does web search + Gemini call)
-            result = execute_subtask(subtask, goal, results)
+            result = execute_subtask(subtask, goal, results, ctx)
             results.append(result)
             
             # Signal complete with full result
@@ -94,10 +122,10 @@ async def run_agent(goal: str):
         
         verdict_prompt = VERDICT_PROMPT.format(
             goal=goal,
+            context_block=context_block,
             all_findings=all_findings
         )
         
-        # CHANGED: Now using call_llm_json
         verdict_data = call_llm_json(verdict_prompt, max_tokens=4000)
         verdict = FinalVerdict(**verdict_data)
         

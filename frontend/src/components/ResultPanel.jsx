@@ -1,10 +1,17 @@
+import { useState } from "react"
 import SubtaskCard from "./SubtaskCard"
 import VerdictBanner from "./VerdictBanner"
 import PDFExport from "./PDFExport"
+import PromptDiff from "./PromptDiff"
+import MutationBar from "./MutationBar"
+import PersonaMirror from "./PersonaMirror"
 
 export default function ResultPanel({ 
-  subtasks, subtaskResults, verdict, goal, phase 
+  subtasks, subtaskResults, verdict, goal, phase,
+  persona, rawInput, enrichedPrompt, onMutate, isMutating
 }) {
+  const [outputMode, setOutputMode] = useState('dense')
+
   const completedResults = subtasks
     .map(t => subtaskResults[t.id])
     .filter(Boolean)
@@ -20,12 +27,21 @@ export default function ResultPanel({
               {goal}
             </p>
           </div>
-          <PDFExport
-            goal={goal}
-            subtaskResults={subtaskResults}
-            verdict={verdict}
-            disabled={phase !== "complete"}
-          />
+          <div className="flex items-center gap-2">
+            {/* Output mode toggle (Feature 10) */}
+            <button
+              onClick={() => setOutputMode(m => m === 'dense' ? 'explain' : 'dense')}
+              className='text-xs border border-slate-700 px-3 py-1.5 rounded-lg
+                text-slate-400 hover:text-white transition-colors'>
+              {outputMode === 'dense' ? '📖 Explain Mode' : '⚡ Expert Mode'}
+            </button>
+            <PDFExport
+              goal={goal}
+              subtaskResults={subtaskResults}
+              verdict={verdict}
+              disabled={phase !== "complete"}
+            />
+          </div>
         </div>
       )}
 
@@ -54,6 +70,20 @@ export default function ResultPanel({
               First results will appear here shortly...
             </p>
           </div>
+        )}
+
+        {/* Post-completion features */}
+        {phase === "complete" && (
+          <>
+            {/* Feature 14: Mutation Bar */}
+            <MutationBar onMutate={onMutate} isLoading={isMutating} />
+
+            {/* Feature 13: Prompt Diff */}
+            <PromptDiff rawInput={rawInput} enrichedPrompt={enrichedPrompt} />
+            
+            {/* Bonus: Persona Mirror */}
+            <PersonaMirror persona={persona} />
+          </>
         )}
       </div>
     </div>
