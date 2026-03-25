@@ -1,0 +1,6 @@
+fastapi==0.135.2
+uvicorn==0.42.0
+pydantic==2.12.5
+pydantic-settings==2.13.1
+google-generativeai==0.8.6
+tavily-python==0.7.23
