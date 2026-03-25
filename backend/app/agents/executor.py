@@ -1,4 +1,4 @@
-from app.tools.claude_client import call_claude, extract_json
+from app.tools.gemini_client import call_llm_json
 from app.tools.tavily_tool import search_web
 from app.schemas import SubtaskDefinition, SubtaskResult
 
@@ -72,8 +72,7 @@ def execute_subtask(
         previous_context=previous_context
     )
     
-    response = call_claude(prompt, max_tokens=1500)
-    raw = extract_json(response)
+    raw = call_llm_json(prompt, max_tokens=4000)
     
     return SubtaskResult(
         subtask_title=raw.get("subtask_title", subtask.title),

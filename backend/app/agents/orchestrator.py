@@ -1,7 +1,7 @@
 import json
 from app.agents.decomposer import decompose_goal
 from app.agents.executor import execute_subtask
-from app.tools.claude_client import call_claude, extract_json
+from app.tools.gemini_client import call_llm_json
 from app.schemas import SubtaskResult, FinalVerdict
 
 VERDICT_PROMPT = """You are GoalMind. You have completed all research subtasks for this goal: "{goal}"
@@ -70,7 +70,7 @@ async def run_agent(goal: str):
                 "description": subtask.description
             })
             
-            # Execute (this does web search + Claude call)
+            # Execute (this does web search + Gemini call)
             result = execute_subtask(subtask, goal, results)
             results.append(result)
             
@@ -97,8 +97,8 @@ async def run_agent(goal: str):
             all_findings=all_findings
         )
         
-        verdict_raw = call_claude(verdict_prompt, max_tokens=1500)
-        verdict_data = extract_json(verdict_raw)
+        # CHANGED: Now using call_llm_json
+        verdict_data = call_llm_json(verdict_prompt, max_tokens=4000)
         verdict = FinalVerdict(**verdict_data)
         
         yield sse("verdict_ready", {"verdict": verdict.model_dump()})

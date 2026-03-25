@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    anthropic_api_key: str
+    gemini_api_key: str  
     tavily_api_key: str
     frontend_url: str = "http://localhost:5173"
 

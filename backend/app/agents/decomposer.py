@@ -1,4 +1,4 @@
-from app.tools.claude_client import call_claude, extract_json
+from app.tools.gemini_client import call_llm_json
 from app.schemas import SubtaskDefinition
 from typing import List
 
@@ -46,6 +46,5 @@ Return the JSON for this goal: "{goal}"
 
 def decompose_goal(goal: str) -> List[SubtaskDefinition]:
     prompt = DECOMPOSE_PROMPT.format(goal=goal)
-    response = call_claude(prompt, max_tokens=1000)
-    raw = extract_json(response)
+    raw = call_llm_json(prompt, max_tokens=4000)
     return [SubtaskDefinition(**item) for item in raw]
