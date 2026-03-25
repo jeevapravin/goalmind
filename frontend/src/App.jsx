@@ -1,10 +1,21 @@
 import { useAgent } from "./hooks/useAgent"
+import { useAuth } from "./hooks/useAuth"
 import GoalInput from "./components/GoalInput"
 import AgentTrace from "./components/AgentTrace"
 import ResultPanel from "./components/ResultPanel"
+import AuthPage from "./components/AuthPage"
 
 export default function App() {
   const agent = useAgent()
+  const { user, loading, login, signup, logout } = useAuth()
+
+  // Show nothing while checking localStorage
+  if (loading) return null
+
+  // Gate: show auth page if not logged in
+  if (!user) {
+    return <AuthPage onLogin={login} onSignup={signup} />
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -20,16 +31,41 @@ export default function App() {
             Autonomous Research Agent
           </span>
         </div>
-        {agent.phase !== "idle" && (
-          <button
-            onClick={agent.reset}
-            className="text-xs text-slate-400 hover:text-white border 
-                       border-slate-700 hover:border-slate-500 px-3 py-1.5 
-                       rounded-lg transition-colors"
-          >
-            ← New Goal
-          </button>
-        )}
+
+        <div className="flex items-center gap-3">
+          {agent.phase !== "idle" && (
+            <button
+              onClick={agent.reset}
+              className="text-xs text-slate-400 hover:text-white border 
+                         border-slate-700 hover:border-slate-500 px-3 py-1.5 
+                         rounded-lg transition-colors"
+            >
+              ← New Goal
+            </button>
+          )}
+
+          {/* User info & logout */}
+          <div className="flex items-center gap-2 pl-3 border-l border-slate-800">
+            <div className="w-6 h-6 bg-brand-600/20 border border-brand-600/40 
+                            rounded-full flex items-center justify-center">
+              <span className="text-xs text-brand-400 font-medium">
+                {user.username.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <span className="text-sm text-slate-300 hidden sm:block">{user.username}</span>
+            <button
+              onClick={logout}
+              className="text-xs text-slate-500 hover:text-red-400 ml-1 
+                         transition-colors"
+              title="Sign out"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* Error banner */}

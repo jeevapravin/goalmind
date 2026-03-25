@@ -37,6 +37,9 @@ build/
 # Vite
 .vite/
 
+# Sensitive files
+ssh_key.txt
+
 # OS/IDE
 .DS_Store
 .vscode/
